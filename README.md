@@ -1,135 +1,98 @@
 # 11328230
-def add_task():
-    print("Add task")
+import random
 
-def show_tasks():
-    print("Show tasks")
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.position = 0
+        self.coins = 0
+        self.stars = 0
+        self.partner = None
+        self.items = []
 
-def main():
-    while True:
-        print("\n=== To-Do List 管理系統 ===")
-        print("1. 顯示任務清單")
-        print("2. 新增任務")
-        print("3. 離開系統")
-        
-        choice = input("請選擇功能（輸入數字）：").strip()
-        
-        if choice == "1":
-            show_tasks()
-        elif choice == "2":
-            add_task()
-        elif choice == "3":
-            print("感謝使用，再見！")
-            break
+    def move(self, board_size):
+        roll = random.randint(1, 6)
+        self.position = (self.position + roll) % board_size
+        print(f"{self.name} 掷骰子得 {roll}，移動到位置 {self.position}")
+        return roll
+
+    def earn_coins(self, amount):
+        if self.partner == "雙倍金幣":
+            amount *= 2
+        self.coins += amount
+        print(f"{self.name} 獲得了 {amount} 金幣，現在共有 {self.coins} 金幣")
+
+    def earn_star(self):
+        self.stars += 1
+        print(f"{self.name} 獲得了一顆星星，現在共有 {self.stars} 顆星星")
+
+    def buy_item(self, item, cost):
+        if self.coins >= cost:
+            self.coins -= cost
+            self.items.append(item)
+            print(f"{self.name} 購買了 {item}，剩餘 {self.coins} 金幣")
         else:
-            print("無效的選擇，請重新輸入。\n")
+            print(f"{self.name} 金幣不足，無法購買 {item}")
 
-# 啟動主程式
-main()
-# 全域變數：用來存儲任務
-pending_tasks = []   # 待完成的任務清單
-completed_tasks = [] # 已完成的任務清單
-# 新增任務
-def add_task():
-    title = input("請輸入任務名稱：").strip()
-    if not title:
-        print("任務名稱不可為空！")
-        return
+    def steal_coins(self, other_player):
+        stolen_amount = min(20, other_player.coins)
+        self.coins += stolen_amount
+        other_player.coins -= stolen_amount
+        print(f"{self.name} 搶奪了 {stolen_amount} 金幣來自 {other_player.name}！")
+
+def create_board():
+    return ["普通格子"] * 15 + ["商店", "搶奪格子", "星星格子", "夥伴格子"]
+
+def play_game():
+    players = [Player("玩家1"), Player("玩家2"), Player("玩家3"), Player("玩家4")]
+    board = create_board()
+    items_for_sale = {"金幣加倍卡": 50, "星星加倍卡": 100}
+    partners = ["雙倍金幣", "雙倍星星"]
+    rounds = 10
+
+    print("歡迎來到大富翁遊戲！")
+
+    for round_num in range(1, rounds + 1):
+        print(f"\n==== 第 {round_num} 回合 ====")
+        
+        for player in players:
+            roll = player.move(len(board))
+            current_tile = board[player.position]
+
+            if current_tile == "普通格子":
+                player.earn_coins(roll * 10)
+            elif current_tile == "商店":
+                print(f"{player.name} 來到了商店，可以購買道具：")
+                for item, cost in items_for_sale.items():
+                    print(f"{item} - {cost} 金幣")
+                choice = input(f"{player.name} 是否要購買道具？(輸入道具名稱或 n 跳過): ").strip()
+                if choice in items_for_sale:
+                    player.buy_item(choice, items_for_sale[choice])
+            elif current_tile == "搶奪格子":
+                target = random.choice([p for p in players if p != player])
+                player.steal_coins(target)
+            elif current_tile == "星星格子":
+                player.earn_star()
+            elif current_tile == "夥伴格子":
+                partner = random.choice(partners)
+                player.partner = partner
+                print(f"{player.name} 獲得了夥伴 {partner}！")
+
+        # 星星兌換機制
+        for player in players:
+            while player.coins >= 100:
+                player.coins -= 100
+                player.earn_star()
+
+    # 遊戲結束統計
+    print("\n==== 遊戲結束 ====")
+    for player in players:
+        print(f"{player.name} 擁有 {player.stars} 顆星星，{player.coins} 金幣")
     
-    description = input("請輸入任務描述（可選）：").strip()
-    due_date = input("請輸入完成期限（格式: YYYY-MM-DD，可選）：").strip()
+    # 判斷勝利者
+    players.sort(key=lambda p: (p.stars, p.coins), reverse=True)
+    winner = players[0]
+    print(f"恭喜 {winner.name} 獲勝！")
 
-    # 建立新任務
-    new_task = {
-        "title": title,
-        "description": description or None, # 這邊用 None 的話，後面 task['description'][:40] 會產生錯誤！
-        "due_date": due_date or None,
-    }
-    pending_tasks.append(new_task)
-    print(f"\n成功新增任務：{new_task['title']}\n")
-# 顯示任務清單
-def show_tasks():
-    print("\n=== 任務清單 ===")
-    print("未完成的任務：")
-    if not pending_tasks:
-        print("\n  目前沒有任何任務！\n")
-    else:
-        for idx, task in enumerate(pending_tasks, start=1):
-            print(f"  {idx}. {task['title']} ({task['description'][:40]})") # 描述部份最多顯示 40 個字元
-    
-    print("\n已完成的任務：")
-    if not completed_tasks:
-        print("\n  目前沒有任何任務！\n")
-    else:
-        for idx, task in enumerate(completed_tasks, start=1):
-            print(f"  {idx}. {task['title']} ({task['description'][:40]})") # 描述部份最多顯示 40 個字元
-    print()
-
-    def complete_task():
-    if not pending_tasks:
-        print("\n目前沒有未完成的任務！\n")
-        return
-
-    show_tasks()
-    try:
-        task_idx = int(input("請輸入要完成的任務編號：")) - 1
-        if 0 <= task_idx < len(pending_tasks):
-            task = pending_tasks.pop(task_idx)
-            completed_tasks.append(task)
-            print(f"\n成功完成任務：{task['title']}\n")
-        else:
-            print("\n無效的編號！請重新選擇。\n")
-    except ValueError:
-        print("\n輸入無效！請輸入數字。\n")
-
-def delete_task():
-    print("\n=== 刪除任務 ===")
-    show_tasks()
-
-    task_type = input("請選擇任務類型（1: 未完成, 2: 已完成）：").strip()
-    if task_type not in ["1", "2"]:
-        print("\n無效的選擇！請輸入 1 或 2。\n")
-        return
-
-    task_list = pending_tasks if task_type == "1" else completed_tasks
-    if not task_list:
-        print("\n選擇的任務清單中沒有任務。\n")
-        return
-
-    try:
-        task_idx = int(input("請輸入要刪除的任務編號：")) - 1
-        if 0 <= task_idx < len(task_list):
-            task = task_list.pop(task_idx)
-            print(f"\n成功刪除任務：{task['title']}\n")
-        else:
-            print("\n無效的編號！請重新選擇。\n")
-    except ValueError:
-        print("\n輸入無效！請輸入數字。\n")
-
-        def main():
-    while True:
-        print("\n=== To-Do List 管理系統 ===")
-        print("1. 顯示任務清單")
-        print("2. 新增任務")
-        print("3. 完成任務")
-        print("4. 刪除任務")
-        print("5. 離開系統")
-        
-        choice = input("請選擇功能（輸入數字）：").strip()
-        
-        if choice == "1":
-            show_tasks()
-        elif choice == "2":
-            add_task()
-        elif choice == "3":
-            complete_task()
-        elif choice == "4":
-            delete_task()
-        elif choice == "5":
-            print("感謝使用，再見！")
-            break
-        else:
-            print("無效的選擇，請重新輸入。\n")
-
-# 啟動主程式
-main()
+if __name__ == "__main__":
+    play_game()
