@@ -1,7 +1,7 @@
 # 11328230
 import random
 
-class Player:
+    class Player:
     def __init__(self, name):
         self.name = name
         self.position = 0
@@ -40,10 +40,10 @@ class Player:
         other_player.coins -= stolen_amount
         print(f"{self.name} 搶奪了 {stolen_amount} 金幣來自 {other_player.name}！")
 
-def create_board():
+    def create_board():
     return ["普通格子"] * 15 + ["商店", "搶奪格子", "星星格子", "夥伴格子"]
 
-def play_game():
+    def play_game():
     players = [Player("玩家1"), Player("玩家2"), Player("玩家3"), Player("玩家4")]
     board = create_board()
     items_for_sale = {"金幣加倍卡": 50, "星星加倍卡": 100}
@@ -94,5 +94,5 @@ def play_game():
     winner = players[0]
     print(f"恭喜 {winner.name} 獲勝！")
 
-if __name__ == "__main__":
+    if __name__ == "__main__":
     play_game()
